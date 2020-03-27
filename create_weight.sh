@@ -38,16 +38,17 @@ then
 fi
 
 
-# Get the absolute directory of this script so that it can find extra/files
+# Get the absolute directory path of this script so that it can find extra/files
 script_dir=$(cd `dirname $0` && pwd)
 
-# If argument 2 is provided and end is not /, add it; otherwise just use it as path. If argument 2 is not given, path would just be empty
+# If argument 2 is provided and doesn't end with /, add it; otherwise just use it as path
+# If argument 2 is not given, path would just be empty
 if [ -n "$path0" ] && [ "${path0: -1}" != "/" ]; then
         path=$path0/
 else
         path=$path0
 fi
-# If argument 1 is full path, reset path to empty
+# If argument 1 is a full path, ignore 2nd argument and reset path variable to empty
 len_file=`echo $file | awk '{n=split($1,a,"/"); print n}'`
 if (( $len_file > 1 )); then
         path=""
@@ -65,8 +66,9 @@ elif [ ! -e $path$file ]; then
 fi
 
 
-##############################################
-
+#################################################
+#	Main script below			#
+#################################################
 
 
 # Get file name before .fits (including full path if full path to file is given)

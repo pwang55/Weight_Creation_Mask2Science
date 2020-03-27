@@ -18,7 +18,7 @@ w = fits.open(wtfile)
 filt = f[0].header['filter'].lower()
 month = f[0].header['date'].split('-')[1]
 
-
+# Get the optic mask directory path from environment variable
 optic_dir = os.environ['_90PRIME_OPTIC_DIR']
 if month == '02':
     month_dir = '/Feb/'
