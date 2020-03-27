@@ -32,7 +32,7 @@ filtermask = fits.open(ffiltermask)
 
 # Get the absolute directory path of where this python script is so that defect_seg_mask.fits can be found
 script_path = sys.path[0]
-defectmask = fits.open(script_path+'/../large_files/defect_segs_mask.fits') # For now put it outside the repository cause GitHub won't allow large files
+defectmask = fits.open(script_path+'/extra/defect_segs_mask.fits') # For now put it outside the repository cause GitHub won't allow large files
 
 print('\n')
 print('Converting: '+'\t'+infile.split('/')[-1]+'\t'+'Using Weight Mask:'+'\t'+'optic_flat_'+filt+'_filtermask.fits')
