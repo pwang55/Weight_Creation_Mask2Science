@@ -1,0 +1,2 @@
+# ignore defect fits file since it's too large for GitHub
+*fits
