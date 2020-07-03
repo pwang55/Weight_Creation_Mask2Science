@@ -3,6 +3,7 @@ from astropy.io import fits
 import sys
 from glob import glob
 import os
+import subprocess
 
 """
 This code use filtermask to mask out outside part of corrected_xxx.fits and wt.fits, set them to zero
@@ -61,10 +62,21 @@ hlistW.insert(0,hduW0)
 
 
 hduIA = fits.HDUList(hlistI)
-hduIA.writeto(file0.replace('corrected_','science_'))
-
 hduWA = fits.HDUList(hlistW)
-hduWA.writeto(wtfile.replace('corrected_','science_'))
+
+file0 = file0.replace('corrected_','science_')
+wtfile = wtfile.replace('corrected_','science_')
+# Check if the replace function accidentally replace the foldername too, it should only replace the filename only
+ncount0 = file0.count('/science_')
+ncountwt = wtfile.count('/science_')
+if ncount0 > 1:
+    file0 = file0.replace('/science_','/corrected_',(ncount0-1))
+if ncountwt > 1:
+    wtfile = wtfile.replace('/science_','/corrected_',(ncountwt-1))
+
+hduIA.writeto(file0)
+hduWA.writeto(wtfile)
+
 
 print('Created: \t'+file0.replace('corrected_','science_').split('/')[-1] + '\t' + wtfile.replace('corrected_','science_').split('/')[-1])
 
