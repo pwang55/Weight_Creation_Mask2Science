@@ -2,6 +2,29 @@
 
 Usage:
 
+In Script folder:
+`$ python photutils_weight_science.py path_to_file/filename`
+
+In Script folder, if running command line for loop, path to the files need to be provided so that the script can find the files:
+```
+$ for files in `cat correctedlist.txt`; do
+> python photutils_weight_science.py $files path_to_files
+> done
+```
+
+In files folder:
+`$ python photutils_weight_science.py filename`
+
+To change backsize, use option: backsize=64 after filename.
+
+This script takes corrected fits image as input, use photutils to calculate background RMS map, convert it to weight map, 
+and mask corrected image and weight image with mask, output to science frames. Lightstreaks will be detected and masked in the weight image.
+
+
+------------------------------------------
+
+Script Usage (this is the older version):
+
 In the same directory as the script:
 `$ ./create_weight.sh file_full_path/filename`
 
