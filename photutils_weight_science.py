@@ -31,7 +31,9 @@ from photutils import source_properties
 import sys
 import os
 
-
+if len(sys.argv) == 1:
+    print(__doc__)
+    sys.exit()
 
 backsize = 64
 backsize_lightstreak = 150
