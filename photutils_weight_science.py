@@ -34,8 +34,9 @@ import os
 
 
 backsize = 64
+backsize_lightstreak = 150
 filtersize = 3
-streak_sigma_threshold = 1.5
+streak_sigma_threshold = 2.5
 elongation_threshold = 10.0
 npixels = 50
 sigma_clip = SigmaClip(sigma=3.)
@@ -73,25 +74,23 @@ elif month == '03':
 maskfile = optic_dir + month_dir + 'optic_flat_' + filt + '_filtermask.fits'
 mask = fits.open(maskfile)
 
-print('Creat weight map for: ' + filename)
+print('Create weight map for: ' + filename)
 print('Filtermask: ' + month_dir + 'optic_flat_' + filt + '_filtermask.fits')
 
 hlistI = []
 hlistW = []
-hlistS = []
-streak_count = 0
+# hlistS = []
+# streak_count = 0
 
 for j in range(1, 17):
     dat = f[j].data
     hdr = f[j].header
     maskj = mask[j].data
-    bkg = Background2D(dat, box_size=backsize, filter_size=filtersize, sigma_clip=sigma_clip, bkg_estimator=bkg_estimator)
-    wt = 1 / bkg.background_rms ** 2
-
     dat[maskj == 0] = 0
-    wt[maskj == 0] = 0
 
-    threshold = bkg.background + (streak_sigma_threshold * bkg.background_rms)
+    # Use a large mesh size to detect lightstreak and extremely saturated stars
+    bkg_lightstreak = Background2D(dat, box_size=backsize_lightstreak, filter_size=filtersize, sigma_clip=sigma_clip, bkg_estimator=bkg_estimator)
+    threshold = bkg_lightstreak.background + (streak_sigma_threshold * bkg_lightstreak.background_rms)
     sigma = 2.0 * gaussian_fwhm_to_sigma
     kernel = Gaussian2DKernel(sigma, x_size=3, y_size=3)
     kernel.normalize()
@@ -100,12 +99,20 @@ for j in range(1, 17):
     tab = cat.to_table()
     elongation = tab['elongation'].value
     streak_id = tab['id'][elongation > elongation_threshold]
-    seg2 = segm.data.copy()
+    segd = segm.data
     if len(streak_id) > 0:
-        streak_count = 1
         for i in range(len(streak_id)):
-            wt[seg2 == streak_id[i]] = 0.0
-            seg2[seg2 == streak_id[i]] = 10000.0
+            # Fill lightstreak and extremely saturated stars with background value
+            dat[segd == streak_id[i]] = bkg_lightstreak.background[segd == streak_id[i]]
+
+    # Use a smaller mesh size to estimate reasonable background
+    bkg = Background2D(dat, box_size=backsize, filter_size=filtersize, sigma_clip=sigma_clip, bkg_estimator=bkg_estimator)
+    wt = 1 / bkg.background_rms ** 2
+    wt[maskj == 0] = 0
+
+    if len(streak_id) > 0:
+        for i in range(len(streak_id)):
+            wt[segd == streak_id[i]] = 0.0
 
     hduI = fits.ImageHDU()
     hduW = fits.ImageHDU()
@@ -118,11 +125,11 @@ for j in range(1, 17):
     hlistI.append(hduI)
     hlistW.append(hduW)
 
-    seg2[seg2 < 10000.0] = 0.0
-    hduS = fits.ImageHDU()
-    hduS.data = seg2
-    hduS.header = hdr
-    hlistS.append(hduS)
+    # seg2[seg2 < 10000.0] = 0.0
+    # hduS = fits.ImageHDU()
+    # hduS.data = seg2
+    # hduS.header = hdr
+    # hlistS.append(hduS)
 
 
 hduI0 = fits.PrimaryHDU()
@@ -140,13 +147,13 @@ hduIA.writeto(path + science_filename, overwrite=True)
 hduWA.writeto(path + weight_filename, overwrite=True)
 
 
-if streak_count > 0:
-    hduS0 = fits.PrimaryHDU()
-    hduS0.header = f[0].header
-    hlistS.insert(0, hduS0)
-    hduSA = fits.HDUList(hlistS)
-    hduSA.writeto(path + science_filename.replace('.fits', '.lightstreak.fits'), overwrite=True)
-    print('Lightstreak masked')
+# if streak_count > 0:
+    # hduS0 = fits.PrimaryHDU()
+    # hduS0.header = f[0].header
+    # hlistS.insert(0, hduS0)
+    # hduSA = fits.HDUList(hlistS)
+    # hduSA.writeto(path + science_filename.replace('.fits', '.lightstreak.fits'), overwrite=True)
+    # print('Lightstreak masked')
 
 print('Science frame and weight image created.\n')
 
