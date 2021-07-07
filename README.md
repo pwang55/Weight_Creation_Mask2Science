@@ -15,7 +15,7 @@ $ for files in `cat correctedlist.txt`; do
 In files folder:
 `$ python photutils_weight_science.py filename`
 
-To change backsize, use option: backsize=64 after filename.
+To change backsize, use option: backsize=64 or -backsize=64 after filename.
 
 This script takes corrected fits image as input, use photutils to calculate background RMS map, convert it to weight map, 
 and mask corrected image and weight image with mask, output to science frames. Lightstreaks will be detected and masked in the weight image.
