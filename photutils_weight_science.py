@@ -24,11 +24,11 @@ import numpy as np
 from astropy.io import fits
 from astropy.stats import SigmaClip
 from photutils import Background2D, MedianBackground
-from photutils import detect_sources
+from photutils.segmentation import detect_sources
 from photutils import deblend_sources
 from astropy.convolution import Gaussian2DKernel
 from astropy.stats import gaussian_fwhm_to_sigma
-from photutils import source_properties
+from photutils.segmentation import SourceCatalog
 import sys
 import os
 import time
@@ -111,13 +111,13 @@ def jan_function():
     sigma = 4.0 * gaussian_fwhm_to_sigma
     kernel = Gaussian2DKernel(sigma, x_size=3, y_size=3)
     kernel.normalize()
-    segm = detect_sources(dat, threshold, npixels=npixels, filter_kernel=kernel)
-    # segm_deblend = deblend_sources(dat, segm, npixels=npixels, filter_kernel=kernel, nlevels=32, contrast=0.001)
-    cat = source_properties(dat, segm)
+    segm = detect_sources(dat, threshold, npixels=npixels, kernel=kernel)
+    # segm_deblend = deblend_sources(dat, segm, npixels=npixels, kernel=kernel, nlevels=32, contrast=0.001)
+    cat = SourceCatalog(dat, segm)
     # cat = source_properties(dat, segm_deblend)
-    tab = cat.to_table()
-    elongation = tab['elongation'].value
-    streak_id = tab['id'][elongation > elongation_threshold]
+    # tab = cat.to_table()
+    elongation = cat.elongation.value
+    streak_id = cat.label[elongation > elongation_threshold]
     segd = segm.data
     # if len(streak_id) > 0:
     #     for i in range(len(streak_id)):
@@ -168,13 +168,13 @@ def mpfunction(j):
     sigma = 4.0 * gaussian_fwhm_to_sigma
     kernel = Gaussian2DKernel(sigma, x_size=3, y_size=3)
     kernel.normalize()
-    segm = detect_sources(dat, threshold, npixels=npixels, filter_kernel=kernel)
-    # segm_deblend = deblend_sources(dat, segm, npixels=npixels, filter_kernel=kernel, nlevels=32, contrast=0.001)
-    cat = source_properties(dat, segm)
+    segm = detect_sources(dat, threshold, npixels=npixels, kernel=kernel)
+    # segm_deblend = deblend_sources(dat, segm, npixels=npixels, kernel=kernel, nlevels=32, contrast=0.001)
+    cat = SourceCatalog(dat, segm)
     # cat = source_properties(dat, segm_deblend)
-    tab = cat.to_table()
-    elongation = tab['elongation'].value
-    streak_id = tab['id'][elongation > elongation_threshold]
+    # tab = cat.to_table()
+    elongation = cat.elongation.value
+    streak_id = cat.label[elongation > elongation_threshold]
     segd = segm.data
     # if len(streak_id) > 0:
     #     for i in range(len(streak_id)):
@@ -224,8 +224,8 @@ if month == '01':
 
 
 if month == '02' or month == '03':
-    p1 = mp.Pool(8)
-    p2 = mp.Pool(8)
+    p1 = mp.get_context("fork").Pool(8)
+    p2 = mp.get_context("fork").Pool(8)
     # jlist = [x for x in range(1, 17)]
     jlist1 = [x for x in range(1, 9)]
     jlist2 = [x for x in range(9, 17)]
